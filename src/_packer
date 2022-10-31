@@ -1,0 +1,158 @@
+#compdef packer
+
+__packer_json_templates() {
+  declare -a template
+  template=($(find . -maxdepth 1 -type f -name '*.json' -o -type f -name '*.hcl' | sed -e 's/\.\///g'))
+  _describe 'templates' template
+}
+
+__packer_hcl_templates() {
+  declare -a template
+  template=($(find . -maxdepth 1 -type f -name '*.hcl' | sed -e 's/\.\///g'))
+  _describe 'templates' template
+}
+
+local -a _packer_cmds
+_packer_cmds=(
+  'build:build image(s) from template'
+  'console:creates a console for testing variable interpolation'
+  'fix:fixes templates from old versions of packer'
+  'fmt:Rewrites HCL2 config files to canonical format'
+  'hcl2_upgrade:transform a JSON template into a HCL2 configuration'
+  'init:Install missing plugins or upgrade plugins'
+  'inspect:see components of a template'
+  'validate:check that a template is valid'
+  'version:Prints the Packer version'
+)
+
+__build() {
+  _arguments \
+    '-color=[(false) Disable color output. (Default: color)]' \
+    '-debug[Debug mode enabled for builds]' \
+    '-except=[(foo,bar,baz)  Build all builds other than these.]' \
+    '-only=[(foo,bar,baz)  Only build the given builds by name.]' \
+    '-force[Force a build to continue if artifacts exist, deletes existing artifacts.]' \
+    '-machine-readable=[Produce machine-readable output.]' \
+    '-on-error=[(cleanup|abort|ask|run-cleanup-provisioner) If the build fails do: clean up (default), abort, ask, or run-cleanup-provisioner.]' \
+    '-parallel-builds=[(1) Number of builds to run in parallel. 1 disables parallelization. 0 means no limit (Default: 0)]' \
+    '-timestamp-ui=[Enable prefixing of each ui output with an RFC3339 timestamp.]' \
+    '-var[("key=value")  Variable for templates, can be used multiple times.]' \
+    '-var-file=[(path)  JSON or HCL2 file containing user variables.]'
+  __packer_json_templates
+}
+
+local -a _packer_fix_cmds
+_packer_fix_cmds=(
+  'iso-md5:Replaces "iso_md5" in builders with "iso_checksum"'
+  'createtime:Replaces ".CreateTime" in builder configs with "{{timestamp}}"'
+  'virtualbox-gaattach:Updates VirtualBox builders using "guest_additions_attach" to use "guest_additions_mode"'
+  'pp-vagrant-override:Fixes provider-specific overrides for Vagrant post-processor'
+  'virtualbox-rename:Updates "virtualbox" builders to "virtualbox-iso"'
+  'vmware-rename:Updates "vmware" builders to "vmware-iso"'
+  'parallels-headless:Removes unused "headless" from Parallels builders'
+  'parallels-deprecations:Removes deprecated "parallels_tools_host_path" from Parallels builders and changes "guest_os_distribution" to "guest_os_type".'
+  'sshkeypath:Updates builders using "ssh_key_path" to use "ssh_private_key_file"'
+  'sshdisableagent:Updates builders using "ssh_disable_agent" to use "ssh_disable_agent_forwarding"'
+  'scaleway-access-key:Updates builders using "access_key" to use "organization_id"'
+  'manifest-filename:Updates "manifest" post-processor so any "filename" field is renamed to "output".'
+  'amazon-shutdown_behavior:Changes "shutdown_behaviour" to "shutdown_behavior" in Amazon builders.'
+  'amazon-enhanced-networking:Replaces "enhanced_networking" in builders with "ena_support"'
+  'amazon-private-ip:Replaces `"ssh_private_ip": true` in amazon builders with `"ssh_interface": "private_ip"`'
+  'amazon-temp-sec-cidrs:Replaces "temporary_security_group_source_cidr" (string) with "temporary_security_group_source_cidrs" (list of strings)'
+  'docker-email:Removes "login_email" from the Docker builder.'
+  'docker-tag-tags:Updates "docker" post-processor so any "tag" field is renamed to "tags".'
+  'powershell-escapes:Removes PowerShell escapes from user env vars and elevated username and password strings'
+  'vmware-compaction:Adds "skip_compaction = true" to "vmware-iso" builders with incompatible disk_type_id'
+  'hyperv-deprecations:Removes the deprecated "vhd_temp_path" setting from Hyper-V ISO builder templates'
+  'hyperv-vmxc-typo:Fixes a typo replacing "clone_from_vmxc_path" with "clone_from_vmcx_path" in Hyper-V VMCX builder templates'
+  'hyperv-cpu-and-ram:Replaces "cpu" with "cpus" and "ram_size" with "memory"in Hyper-V VMCX builder templates'
+  'clean-image-name:Replaces /clean_(image|ami)_name/ in builder configs with "clean_resource_name"'
+  'spot-price-auto-product:Removes the deprecated "spot_price_auto_product" setting from Amazon builder templates'
+  'qemu-disk-size:Updates "disk_size" from int to string in QEMU builders.'
+  'galaxy-command:Replaces "galaxycommand" in ansible-local provisioner configs with "galaxy_command"'
+  'comm-config:Remove ssh prefixes from communicator port forwarding configuration (host_port_min, host_port_max, skip_nat_mapping)'
+  'ssh-wait-timeout:Replaces "ssh_wait_timeout" with "ssh_timeout"'
+  'vsphere-iso-net-disk:Removes deprecated network and disk fields from "vsphere-iso" builder'
+  'iso-checksum-type-and-url:Puts content of potential "iso_checksum_url" and "iso_checksum_url" in "iso_checksum"'
+  'qemu-host-port:Updates ssh_host_port_min and ssh_host_port_max to host_port_min and host_port_max'
+  'azure-exclude_from_latest:Changes "exlude_from_latest" to "exclude_from_latest" in Azure builders.'
+  'proxmox-type:Upgrades the builder type proxmox to proxmox-iso'
+)
+
+__console() {
+    _arguments \
+        '-var[("key=value")  Variable for templates, can be used multiple times.]' \
+        '-var-file=[(path)  JSON or HCL2 file containing user variables.]'
+    __packer_json_templates
+}
+
+__fmt() {
+  _arguments \
+    '-check[Check if the input is formated. Exit status will be 0 if all input is properl formatted and non-zero otherwise.]' \
+    '-diff[Display diffs of fomatting change]' \
+    "-write=[(false) Don't write to source files (always disabled if using -check)]"
+    __packer_hcl_templates
+}
+
+__fix() {
+  _describe -t commands "packer fix command" _packer_fix_cmds
+  _arguments \
+    '-validate=[(true)  If true (default), validates the fixed template.]'
+  __packer_json_templates
+}
+
+__hcl2_upgrade() {
+  _arguments \
+    '-output-file=[(PATH) Name of the HCL2 file to write in. Must have the suffix ".pkr.hcl"]' \
+    '-with-annotations[Add helper annotation comments to the file to help new HCL2 users uderstand the tempalte format.]'
+  __packer_json_templates
+}
+
+__init() {
+  _arguments \
+    '-upgrade[Upgrade installed plugins to new version if available]'
+  __packer_json_templates
+}
+
+__inspect() {
+  _arguments \
+    '-machine-readable[Machine-readable output]'
+  __packer_json_templates
+}
+
+__validate() {
+  _arguments \
+    '-syntax-only[Only check syntax. Do not verify config of the template.]' \
+    '-except=[(foo,bar,baz)  Validate all builds other than these]' \
+    '-only=[(foo,bar,baz)  Validate only these builds]' \
+    '-var[("key=value")  Variable for templates, can be used multiple times.]' \
+    '-var-file=[(path)  JSON or HCL2 file containing user variables.]'
+  __packer_json_templates
+}
+
+_arguments '*:: :->command'
+
+if (( CURRENT == 1 )); then
+  _describe -t commands "packer command" _packer_cmds
+  return
+fi
+
+local -a _command_args
+case "$words[1]" in
+  build)
+    __build ;;
+  console)
+    __console ;;
+  fix)
+    __fix ;;
+  fmt)
+    __fmt ;;
+  hcl2_upgrade)
+      __hcl2_upgrade ;;
+  inspect)
+    __inspect ;;
+  init)
+    __init ;;
+  validate)
+    __validate ;;
+esac
